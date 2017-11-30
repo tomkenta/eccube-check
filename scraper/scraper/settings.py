@@ -93,3 +93,7 @@ DEPTH_LIMIT = 1
 
 # Time out download
 DOWNLOAD_TIMEOUT = 10
+
+# OUTPUT FORMAT
+FEED_FORMAT = 'json'
+FEED_URI = 'data/data.json'

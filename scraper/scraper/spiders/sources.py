@@ -6,7 +6,7 @@ from ..items import Source
 
 
 class SourcesSpider(CrawlSpider):
-    url = 'https://shokki-pro.com'
+    url = 'http://www.kawasaki-chintai.com/'
     name = 'sources'
     allowed_domains = [url]
     start_urls = [url]
