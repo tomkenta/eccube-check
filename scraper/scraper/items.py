@@ -13,3 +13,7 @@ class Quote(scrapy.Item):
     author = scrapy.Field()
     text = scrapy.Field()
     tags = scrapy.Field()
+
+
+class Source(scrapy.Item):
+    src = scrapy.Field()
