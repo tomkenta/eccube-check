@@ -19,7 +19,7 @@ if __name__ == '__main__':
         print("Usage : python eccube_check.py <url>")
         exit(0)
 
-    f = open('data/output.json', 'r')
+    f = open('data/data.json', 'r')
     data = json.load(f)
     f.close()
 
