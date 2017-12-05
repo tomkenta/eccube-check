@@ -3,6 +3,7 @@ from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from ..items import Source
+from scrapy.exceptions import *
 import re
 
 
@@ -14,12 +15,12 @@ class SourcesSpider(CrawlSpider):
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
 
-        for src in srcs:
+        for i, src in enumerate(srcs):
             src_url = response.urljoin(src)
 
             if re.search(r"eccube", src):
                 yield {'ec_cube': 'True', 'url': src_url}
-                return
+                raise CloseSpider("EC-CUBE found")
 
             yield Request(src_url, callback=self.parse_code)
 
@@ -31,5 +32,5 @@ class SourcesSpider(CrawlSpider):
         if is_eccube:
             item['ec_cube'] = str(is_eccube)
             item['url'] = response.url
-        yield item
-        return
+            yield item
+            raise CloseSpider("EC-CUBE found")
