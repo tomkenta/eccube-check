@@ -1,4 +1,4 @@
-import sys, json
+import sys, json, os
 from urllib.parse import urlparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -31,16 +31,15 @@ if __name__ == '__main__':
         print("Usage : python eccube_check.py <url>")
         exit(0)
 
-    f = open('data/data.json', 'r')
-    data = json.load(f)
-    f.close()
-
-    for ele in data:
-        pattern = r"eccube"
-        if ele:
-            is_eccube = ele['ec_cube']
-            if bool(is_eccube):
-                print(url + ' uses EC-CUBE')
-                exit(0)
+    with open('data/data.json', 'r') as f:
+        if os.fstat(f.fileno()).st_size > 0:
+            data = json.load(f)
+            for ele in data:
+                pattern = r"eccube"
+                if ele:
+                    is_eccube = ele['ec_cube']
+                    if bool(is_eccube):
+                        print(url + ' uses EC-CUBE')
+                        exit(0)
 
     print(url + 'DO NOT use EC-CUBE')
