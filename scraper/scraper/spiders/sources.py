@@ -1,32 +1,35 @@
 # -*- coding: utf-8 -*-
-import scrapy
+from scrapy import Request
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from ..items import Source
+import re
 
 
 class SourcesSpider(CrawlSpider):
-    url = 'http://www.kawasaki-chintai.com/'
     name = 'sources'
-    allowed_domains = [url]
-    start_urls = [url]
+    allowed_domains = ["kawasaki-chintai.com"]
+    start_urls = ["http://www.kawasaki-chintai.com"]
 
-    rules = (
-        Rule(LinkExtractor(allow=r'.*'),
-             callback='parse_start_url',
-             follow=True,
-             ),
-    )
+    def parse(self, response):
+        srcs = response.xpath('//script/@src').extract()
 
-    def parse_start_url(self, response):
-        """"start_urlsのインデックスページもスクレイピングする"""
-        return self.parse_item(response)
+        for src in srcs:
+            src_url = response.urljoin(src)
 
-    def parse_item(self, response):
-        """"クロールしたページからItemをスクレイピングする"""
-        # 1ページにつき1アイテムのみ
-        for cut_html in response.xpath('//script/@src'):
-            item = Source()
-            item['src'] = cut_html.extract()
+            if re.search(r"eccube", src):
+                yield {'ec_cube': 'True', 'url': src_url}
+                return
 
-            yield item
+            yield Request(src_url, callback=self.parse_code)
+
+    def parse_code(self, response):
+        print("parse_code here")
+        item = Source()
+
+        is_eccube = "EC-CUBE" in response.text[0:500]
+        if is_eccube:
+            item['ec_cube'] = str(is_eccube)
+            item['url'] = response.url
+        yield item
+        return

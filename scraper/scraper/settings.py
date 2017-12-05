@@ -40,7 +40,7 @@ DOWNLOAD_DELAY = 3
 # Override the default request headers:
 DEFAULT_REQUEST_HEADERS = {
     #   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    'Accept-Language': 'en',
+    # 'Accept-Language': 'en',
 }
 
 # Enable or disable spider middlewares
@@ -89,7 +89,7 @@ DEFAULT_REQUEST_HEADERS = {
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # How deep you wanna scrape (default :0  no limit)
-DEPTH_LIMIT = 1
+DEPTH_LIMIT = 0
 
 # Time out download
 DOWNLOAD_TIMEOUT = 10
