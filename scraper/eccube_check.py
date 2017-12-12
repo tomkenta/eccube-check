@@ -1,7 +1,21 @@
-import sys, json, os
+import sys, json, os, argparse
 from urllib.parse import urlparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+
+# コマンドライン用のパーサ
+parser = argparse.ArgumentParser(
+    prog='eccube_check.py',
+    # usage='python eccube_check.py <url/csv>',
+    description='eccube checker ',
+    epilog='(end)',
+    add_help=True
+)
+
+parser.add_argument('-u', '--url',
+                    help='check one url OUTPUT: (input url used EC-CUBE /DO NOT use EC-CUBE )')
+parser.add_argument('-c', '--csv',
+                    help='check urls in csv OUTPUT: csv.')
 
 
 def eccube_check(url, domain):
@@ -12,21 +26,24 @@ def eccube_check(url, domain):
 
 
 if __name__ == '__main__':
-    args = sys.argv
-    url = ""
+    args = parser.parse_args()
+    url = args.url
+    csv = args.csv
 
-    if len(args) == 2:
+    if url is not None:
         # data.jsonを空に
-        f = open('data/data.json', 'w')
-        f.write("")
-        f.close()
+        with open('data/data.json', 'w') as f:
+            f.write("")
 
-        url = args[1]
+        # urlからdomainを取る
         parsed_url = urlparse(url)
         domain = '{uri.netloc}'.format(uri=parsed_url)
         print(url)
         print(domain)
+
+        # urlによるcheck開始
         eccube_check(url, domain)
+
     else:
         print("Usage : python eccube_check.py <url>")
         exit(0)
