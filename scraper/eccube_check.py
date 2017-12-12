@@ -1,4 +1,4 @@
-import sys, json, os, argparse
+import sys, json, csv, os, argparse
 from urllib.parse import urlparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -6,7 +6,6 @@ from scrapy.utils.project import get_project_settings
 # コマンドライン用のパーサ
 parser = argparse.ArgumentParser(
     prog='eccube_check.py',
-    # usage='python eccube_check.py <url/csv>',
     description='eccube checker ',
     epilog='(end)',
     add_help=True
@@ -44,8 +43,10 @@ if __name__ == '__main__':
         # urlによるcheck開始
         eccube_check(url, domain)
 
+    elif csv is not None:
+        pass
     else:
-        print("Usage : python eccube_check.py <url>")
+        parser.print_help()
         exit(0)
 
     with open('data/data.json', 'r') as f:
