@@ -30,7 +30,7 @@ class SourcesSpider(CrawlSpider):
 
         is_eccube = "EC-CUBE" in response.text[0:500]
         if is_eccube:
-            item['ec_cube'] = str(is_eccube)
             item['url'] = response.url
+            item['ec_cube'] = str(is_eccube)
             yield item
             raise CloseSpider("EC-CUBE found")
