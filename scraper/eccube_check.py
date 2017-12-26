@@ -29,6 +29,7 @@ def eccube_check(url, domain):
     # })
     process = CrawlerProcess(settings)
 
+    #引数型チェック
     if isinstance(url, str):
         process.crawl('sources', start_urls=[url], allowed_domains=[domain])
 
@@ -38,6 +39,7 @@ def eccube_check(url, domain):
         print("eccube_check(url, domain): url/domain should be str or list")
         exit(1)
 
+    #クロール開始
     process.start()
 
 
@@ -90,10 +92,17 @@ if __name__ == '__main__':
         for url in urls:
             domains.append(crop_domain_from_url(url))
 
+        # urlによるcheck開始
         eccube_check(urls, domains)
 
+        print(csv_data)
+
         # ec-cube列を初期化
-        # data['ec-cube'] = ''
+        csv_data['ec-cube'] = ''
+        print(csv_data)
+
+
+
         #
         # with open('data/data.json', 'r') as f:
         #     if os.fstat(f.fileno()).st_size > 0:

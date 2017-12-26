@@ -9,8 +9,8 @@ import re
 
 class SourcesSpider(CrawlSpider):
     name = 'sources'
-    allowed_domains = ["kawasaki-chintai.com"]
-    start_urls = ["http://www.kawasaki-chintai.com"]
+    #allowed_domains = ["kawasaki-chintai.com"]
+    #start_urls = ["http://www.kawasaki-chintai.com"]
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
@@ -20,12 +20,13 @@ class SourcesSpider(CrawlSpider):
 
             if re.search(r"eccube", src):
                 yield {'ec_cube': 'True', 'url': src_url}
-                raise CloseSpider("EC-CUBE found")
+                #単一urlへのcheckの場合は止める
+                if len(self.start_urls) == 1:
+                    raise CloseSpider("EC-CUBE found")
 
             yield Request(src_url, callback=self.parse_code)
 
     def parse_code(self, response):
-        print("parse_code here")
         item = Source()
 
         is_eccube = "EC-CUBE" in response.text[0:500]
@@ -33,4 +34,6 @@ class SourcesSpider(CrawlSpider):
             item['url'] = response.url
             item['ec_cube'] = str(is_eccube)
             yield item
-            raise CloseSpider("EC-CUBE found")
+            #単一urlへのcheckの場合は止める
+            if len(self.start_urls) == 1:
+                raise CloseSpider("EC-CUBE found")
