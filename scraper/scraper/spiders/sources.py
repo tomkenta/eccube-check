@@ -4,6 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 from ..items import Source
 from scrapy.exceptions import *
+from scrapy.utils.request import referer_str
 import re
 
 
@@ -19,8 +20,9 @@ class SourcesSpider(CrawlSpider):
             src_url = response.urljoin(src)
 
             if re.search(r"eccube", src):
-                yield {'ec_cube': 'True', 'url': src_url}
-                #単一urlへのcheckの場合は止める
+                #url は baseurlをrefererを使って取る
+                yield {'ec_cube': 'True', 'url': referer_str(response.request)}
+                # 単一urlへのcheckの場合は止める
                 if len(self.start_urls) == 1:
                     raise CloseSpider("EC-CUBE found")
 
@@ -31,9 +33,11 @@ class SourcesSpider(CrawlSpider):
 
         is_eccube = "EC-CUBE" in response.text[0:500]
         if is_eccube:
-            item['url'] = response.url
+            #item['url'] = response.url
+            #url は baseurlをrefererを使って取る
+            item['url'] = referer_str(response.request)
             item['ec_cube'] = str(is_eccube)
             yield item
-            #単一urlへのcheckの場合は止める
+            # 単一urlへのcheckの場合は止める
             if len(self.start_urls) == 1:
                 raise CloseSpider("EC-CUBE found")

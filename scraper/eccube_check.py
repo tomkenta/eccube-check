@@ -3,6 +3,7 @@ import pandas as pd
 from urllib.parse import urlparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+from time import time
 
 # コマンドライン用のパーサ
 parser = argparse.ArgumentParser(
@@ -51,6 +52,7 @@ def crop_domain_from_url(url):
 
 
 if __name__ == '__main__':
+    start = time()
     args = parser.parse_args()
     url = args.url
     csv = args.csv
@@ -85,8 +87,9 @@ if __name__ == '__main__':
             f.write("")
 
         csv_data = pd.read_csv(csv)
-        data = csv_data['url']
-        urls = data.tolist()
+
+        url_data = csv_data['url']
+        urls = url_data.tolist()
         domains = []
 
         for url in urls:
@@ -95,25 +98,39 @@ if __name__ == '__main__':
         # urlによるcheck開始
         eccube_check(urls, domains)
 
-        print(csv_data)
+        eccube_url_data = []
+        with open('data/data.json', 'r') as f:
+            if os.fstat(f.fileno()).st_size > 0:
+                eccube_url_data = json.load(f)
 
-        # ec-cube列を初期化
-        csv_data['ec-cube'] = ''
-        print(csv_data)
+        # 重複の解消 TODO:高速化の余地
+        eccube_url_data_uniq = []
+        for x in eccube_url_data:
+            if x not in eccube_url_data_uniq:
+                eccube_url_data_uniq.append(x)
 
+        # SeriesからDataFrameに
+        target_data = url_data.to_frame('url')
+        # ec_cube列を初期化
+        target_data['ec_cube'] = ""
+        print(target_data)
 
+        # ec_cubeを使っているurlsのリストを抽出
+        eccube_urls = [ele["url"] for ele in eccube_url_data_uniq]
 
-        #
-        # with open('data/data.json', 'r') as f:
-        #     if os.fstat(f.fileno()).st_size > 0:
-        #         data = json.load(f)
-        #     for ele in data:
-        #         pattern = r"eccube"
-        #         if ele:
-        #             is_eccube = ele['ec_cube']
-        #             if bool(is_eccube):
-        #                 pass
+        for index in target_data.index:
+            if target_data.at[index, 'url'] in eccube_urls:
+                target_data.at[index, 'ec_cube'] = "EC-CUBE"
+        print(target_data)
 
+        output_data = csv_data.merge(target_data)
+        print(output_data)
+
+        print("出力")
+        output_data.to_csv("data/output.csv")
+
+        elapsed_time = time() - start
+        print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
     else:
         parser.print_help()
