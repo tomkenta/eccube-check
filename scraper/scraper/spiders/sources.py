@@ -6,25 +6,56 @@ from ..items import Source
 from scrapy.exceptions import *
 from scrapy.utils.request import referer_str
 import re
+from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
+
+# logging
+logger = getLogger(__name__)
+logger.setLevel(DEBUG)
+# コンソール表示用
+stream_handler = StreamHandler()
+# ログファイル用
+file_handler = FileHandler(filename='log/test.log')
+
+formatter = Formatter(
+    fmt="%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+stream_handler.setFormatter(formatter)
+stream_handler.setLevel(DEBUG)
+file_handler.setFormatter(formatter)
+file_handler.setLevel(DEBUG)
+logger.addHandler(stream_handler)
+logger.addHandler(file_handler)
 
 
 class SourcesSpider(CrawlSpider):
     name = 'sources'
+    # self.loggerに対するsetting
+    custom_settings = {
+        'LOG_FILE': 'log/test.log',
+        'LOG_ENABLED': True,
+        'LOG_FORMAT': '%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s',
+        'LOG_DATEFORMAT': '%Y-%m-%d %H:%M:%S',
+        'LOG_STDOUT': True
+    }
 
     # allowed_domains = ["kawasaki-chintai.com"]
     # start_urls = ["http://www.kawasaki-chintai.com"]
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
+        item = Source()
 
         for i, src in enumerate(srcs):
             src_url = response.urljoin(src)
 
             if re.search(r"eccube", src):
                 # url は baseurlをrefererを使って取る
-                yield {'ec_cube': 'True', 'url': referer_str(response.request)}
+                res = {'ec_cube': 'True', 'url': referer_str(response.request)}
+                logger.info("EC-CUBE found for %s", referer_str(response.request))
+                logger.debug(str(res))
+                yield res
                 # 単一urlへのcheckの場合は止める
                 if len(self.start_urls) == 1:
+                    logger.info("close spider with EC-CUBE found")
                     raise CloseSpider("EC-CUBE found")
 
             yield Request(src_url, callback=self.parse_code)
@@ -36,9 +67,11 @@ class SourcesSpider(CrawlSpider):
         if is_eccube:
             # item['url'] = response.url
             # url は baseurlをrefererを使って取る
-            item['url'] = referer_str(response.request)
             item['ec_cube'] = str(is_eccube)
+            item['url'] = referer_str(response.request)
+            logger.info("EC-CUBE found for %s", referer_str(response.request))
             yield item
             # 単一urlへのcheckの場合は止める
             if len(self.start_urls) == 1:
+                logger.info("close spider with EC-CUBE found")
                 raise CloseSpider("EC-CUBE found")

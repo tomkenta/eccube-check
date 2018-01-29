@@ -4,6 +4,27 @@ from urllib.parse import urlparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from time import time
+from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
+
+# logging
+logger = getLogger(__name__)
+logger.setLevel(DEBUG)
+# コンソール表示用
+stream_handler = StreamHandler()
+# ログファイル用
+file_handler = FileHandler(filename='log/test.log')
+
+formatter = Formatter(
+    fmt="%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+stream_handler.setFormatter(formatter)
+stream_handler.setLevel(DEBUG)
+
+file_handler.setFormatter(formatter)
+file_handler.setLevel(DEBUG)
+
+logger.addHandler(stream_handler)
+logger.addHandler(file_handler)
 
 # コマンドライン用のパーサ
 parser = argparse.ArgumentParser(
@@ -24,6 +45,7 @@ def eccube_check(url, domain):
 
     # settings.pyから設定を得る
     settings = get_project_settings()
+
     # settings.update({
     #     "FEED_FORMAT": 'csv',
     #     "FEED_URI": 'data/data.csv'
@@ -37,7 +59,7 @@ def eccube_check(url, domain):
     elif isinstance(url, list):
         process.crawl('sources', start_urls=url, allowed_domains=domain)
     else:
-        print("eccube_check(url, domain): url/domain should be str or list")
+        logger.warning("eccube_check(url, domain): url/domain should be str or list")
         exit(1)
 
     # クロール開始
@@ -52,6 +74,8 @@ def crop_domain_from_url(url):
 
 
 if __name__ == '__main__':
+    logger.info("========================================%s========================================",
+                "EC-CUBE クローリング開始")
     start = time()
     args = parser.parse_args()
     url = args.url
@@ -126,11 +150,15 @@ if __name__ == '__main__':
         output_data = csv_data.merge(target_data)
         print(output_data)
 
-        print("出力")
+        logger.debug("CSVに結果を出力")
         output_data.to_csv("data/output.csv")
 
         elapsed_time = time() - start
-        print("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+        logger.info("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+        logger.info("exit with 0")
+        logger.info("========================================%s========================================",
+                    "EC-CUBE クローリング終了")
+        exit(0)
 
     else:
         parser.print_help()
