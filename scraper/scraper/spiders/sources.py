@@ -49,23 +49,25 @@ class SourcesSpider(CrawlSpider):
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
-        item = Source()
 
-        for i, src in enumerate(srcs):
-            src_url = response.urljoin(src)
+        if srcs:
+            for i, src in enumerate(srcs):
+                src_url = response.urljoin(src)
 
-            if re.search(r"eccube", src):
-                # 一回の場合は url は baseurlをget_base_urlを使って取る
-                res = {'ec_cube': 'True', 'url': get_base_url(response)}
-                logger.info("EC-CUBE found for %s", get_base_url(response))
-                logger.debug(str(res))
-                yield res
-                # 単一urlへのcheckの場合は止める
-                if len(self.start_urls) == 1:
-                    logger.info("close spider with EC-CUBE found")
-                    raise CloseSpider("EC-CUBE found")
+                if re.search(r"eccube", src):
+                    # 一回の場合は url は baseurlをget_base_urlを使って取る
+                    res = {'ec_cube': 'True', 'url': get_base_url(response)}
+                    logger.info("EC-CUBE found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+                    # 単一urlへのcheckの場合は止める
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with EC-CUBE found")
+                        raise CloseSpider("EC-CUBE found")
 
-            yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
+                yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
+        else:
+            logger.warning("srcが見つからなかった %s" % response.request.url)
 
     def parse_code(self, response):
         item = Source()
