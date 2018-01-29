@@ -76,6 +76,9 @@ def crop_domain_from_url(url):
 if __name__ == '__main__':
     logger.info("========================================%s========================================",
                 "EC-CUBE クローリング開始")
+    args_str = ' '.join(sys.argv)
+    logger.info("実行したコマンド:%s" % args_str)
+
     start = time()
     args = parser.parse_args()
     url = args.url
