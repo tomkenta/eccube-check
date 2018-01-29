@@ -6,6 +6,8 @@ from ..items import Source
 from scrapy.exceptions import *
 from scrapy.utils.request import referer_str
 from scrapy.utils.response import get_base_url
+from scrapy.spidermiddlewares.httperror import HttpError
+from twisted.internet.error import DNSLookupError, TimeoutError, TCPTimedOutError
 import re
 from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
 
@@ -41,6 +43,10 @@ class SourcesSpider(CrawlSpider):
     # allowed_domains = ["kawasaki-chintai.com"]
     # start_urls = ["http://www.kawasaki-chintai.com"]
 
+    def start_requests(self):
+        for u in self.start_urls:
+            yield Request(u, callback=self.parse, errback=self.err_handle)
+
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
         item = Source()
@@ -59,7 +65,7 @@ class SourcesSpider(CrawlSpider):
                     logger.info("close spider with EC-CUBE found")
                     raise CloseSpider("EC-CUBE found")
 
-            yield Request(src_url, callback=self.parse_code)
+            yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
 
     def parse_code(self, response):
         item = Source()
@@ -75,3 +81,18 @@ class SourcesSpider(CrawlSpider):
             if len(self.start_urls) == 1:
                 logger.info("close spider with EC-CUBE found")
                 raise CloseSpider("EC-CUBE found")
+
+    def err_handle(self, failure):
+        self.logger.error(repr(failure))
+
+        if failure.check(HttpError):
+            response = failure.value.response
+            self.logger.error('HttpError on %s', response.url)
+
+        elif failure.check(DNSLookupError):
+            request = failure.request
+            self.logger.error('DNSLookupError on %s', request.url)
+
+        elif failure.check(TimeoutError, TCPTimedOutError):
+            request = failure.request
+            self.logger.error('TimeoutError on %s', request.url)
