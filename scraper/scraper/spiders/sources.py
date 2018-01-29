@@ -5,6 +5,7 @@ from scrapy.spiders import CrawlSpider, Rule
 from ..items import Source
 from scrapy.exceptions import *
 from scrapy.utils.request import referer_str
+from scrapy.utils.response import get_base_url
 import re
 from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
 
@@ -31,7 +32,7 @@ class SourcesSpider(CrawlSpider):
     # self.loggerに対するsetting
     custom_settings = {
         'LOG_FILE': 'log/test.log',
-        'LOG_ENABLED': True,
+        'LOG_ENABLED': False,
         'LOG_FORMAT': '%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s',
         'LOG_DATEFORMAT': '%Y-%m-%d %H:%M:%S',
         'LOG_STDOUT': True
@@ -48,9 +49,9 @@ class SourcesSpider(CrawlSpider):
             src_url = response.urljoin(src)
 
             if re.search(r"eccube", src):
-                # url は baseurlをrefererを使って取る
-                res = {'ec_cube': 'True', 'url': referer_str(response.request)}
-                logger.info("EC-CUBE found for %s", referer_str(response.request))
+                # 一回の場合は url は baseurlをget_base_urlを使って取る
+                res = {'ec_cube': 'True', 'url': get_base_url(response)}
+                logger.info("EC-CUBE found for %s", get_base_url(response))
                 logger.debug(str(res))
                 yield res
                 # 単一urlへのcheckの場合は止める
@@ -65,8 +66,7 @@ class SourcesSpider(CrawlSpider):
 
         is_eccube = "EC-CUBE" in response.text[0:500]
         if is_eccube:
-            # item['url'] = response.url
-            # url は baseurlをrefererを使って取る
+            # 再帰的に取る場合は url は baseurlをrefererを使って取る
             item['ec_cube'] = str(is_eccube)
             item['url'] = referer_str(response.request)
             logger.info("EC-CUBE found for %s", referer_str(response.request))
