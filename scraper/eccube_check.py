@@ -143,7 +143,9 @@ if __name__ == '__main__':
         eccube_urls = [ele["url"] for ele in eccube_url_data_uniq]
 
         for index in target_data.index:
-            if target_data.at[index, 'url'] in eccube_urls:
+            target_url = target_data.at[index, 'url']
+            # https 対応
+            if target_url in eccube_urls or target_url.replace('http', 'https') in eccube_urls:
                 target_data.at[index, 'ec_cube'] = "EC-CUBE"
         print(target_data)
 
