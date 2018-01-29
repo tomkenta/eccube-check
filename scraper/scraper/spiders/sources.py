@@ -10,8 +10,9 @@ import re
 
 class SourcesSpider(CrawlSpider):
     name = 'sources'
-    #allowed_domains = ["kawasaki-chintai.com"]
-    #start_urls = ["http://www.kawasaki-chintai.com"]
+
+    # allowed_domains = ["kawasaki-chintai.com"]
+    # start_urls = ["http://www.kawasaki-chintai.com"]
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
@@ -20,7 +21,7 @@ class SourcesSpider(CrawlSpider):
             src_url = response.urljoin(src)
 
             if re.search(r"eccube", src):
-                #url は baseurlをrefererを使って取る
+                # url は baseurlをrefererを使って取る
                 yield {'ec_cube': 'True', 'url': referer_str(response.request)}
                 # 単一urlへのcheckの場合は止める
                 if len(self.start_urls) == 1:
@@ -33,8 +34,8 @@ class SourcesSpider(CrawlSpider):
 
         is_eccube = "EC-CUBE" in response.text[0:500]
         if is_eccube:
-            #item['url'] = response.url
-            #url は baseurlをrefererを使って取る
+            # item['url'] = response.url
+            # url は baseurlをrefererを使って取る
             item['url'] = referer_str(response.request)
             item['ec_cube'] = str(is_eccube)
             yield item

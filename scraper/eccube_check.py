@@ -30,7 +30,7 @@ def eccube_check(url, domain):
     # })
     process = CrawlerProcess(settings)
 
-    #引数型チェック
+    # 引数型チェック
     if isinstance(url, str):
         process.crawl('sources', start_urls=[url], allowed_domains=[domain])
 
@@ -40,7 +40,7 @@ def eccube_check(url, domain):
         print("eccube_check(url, domain): url/domain should be str or list")
         exit(1)
 
-    #クロール開始
+    # クロール開始
     process.start()
 
 
@@ -130,7 +130,7 @@ if __name__ == '__main__':
         output_data.to_csv("data/output.csv")
 
         elapsed_time = time() - start
-        print ("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+        print("elapsed_time:{0}".format(elapsed_time) + "[sec]")
 
     else:
         parser.print_help()
