@@ -148,6 +148,7 @@ if __name__ == '__main__':
         for index in target_data.index:
             target_url = target_data.at[index, 'url']
             # https と 末尾の/対応
+            # index のお陰で scrapyでitemをyieldする順番(eccube_urlsの順番)がわからなくても元データとの順番が保たれる
             if target_url in eccube_urls \
                     or target_url.replace('http', 'https') in eccube_urls \
                     or target_url + "/" in eccube_urls \
@@ -155,7 +156,7 @@ if __name__ == '__main__':
                 target_data.at[index, 'ec_cube'] = "EC-CUBE"
         print(target_data)
         # RDBの勉強必要
-        output_data = pd.merge(csv_data,target_data, left_index=True, right_index=True, on='url')
+        output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='url')
         print(output_data)
 
         logger.debug("CSVに結果を出力")

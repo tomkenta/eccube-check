@@ -38,6 +38,9 @@ class SourcesSpider(CrawlSpider):
         'LOG_STDOUT': True
     }
 
+    # メンテナンスされていないけどec-cubeを使っているページ用
+    handle_httpstatus_list = [500]
+
     # allowed_domains = ["kawasaki-chintai.com"]
     # start_urls = ["http://www.kawasaki-chintai.com"]
 
@@ -45,9 +48,21 @@ class SourcesSpider(CrawlSpider):
         for url in self.start_urls:
             try:
                 yield Request(url, callback=self.parse, errback=self.err_handle)
+
             except ValueError:
                 logger.error("不正なURLを検知 :%s" % url)
                 pass
+                # TODO: 最初のurl のクレンジング
+                # http_url = "http://" + url
+                # logger.debug("httpをつけてリトライ :%s" % http_url)
+                #
+                # try:
+                #     yield Request(http_url, callback=self.parse, errback=self.err_handle)
+                #
+                # except ValueError:
+                #     logger.error("再び不正なURLを検知 :%s" % http_url)
+                #     pass
+
             except:
                 logger.error("スタート時にエラーの発生 :%s" % url)
                 raise CloseSpider("異常終了")
