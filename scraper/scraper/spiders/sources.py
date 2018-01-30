@@ -44,8 +44,15 @@ class SourcesSpider(CrawlSpider):
     # start_urls = ["http://www.kawasaki-chintai.com"]
 
     def start_requests(self):
-        for u in self.start_urls:
-            yield Request(u, callback=self.parse, errback=self.err_handle)
+        for url in self.start_urls:
+            try:
+                yield Request(url, callback=self.parse, errback=self.err_handle)
+            except ValueError:
+                logger.error("不正なURLを検知 :%s" % url)
+                pass
+            except:
+                logger.error("スタート時にエラーの発生 :%s" % url)
+                raise CloseSpider("異常終了")
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
@@ -65,9 +72,13 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with EC-CUBE found")
                         raise CloseSpider("EC-CUBE found")
 
-                yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
+                elif re.search(r"jquery", src):
+                    # logger.debug("jQueryのsrcはスキップします:%s", src)
+                    continue
+                else:
+                    yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
         else:
-            logger.warning("srcが見つからなかった %s" % response.request.url)
+            logger.warning("index.html内にscript/@srcが見つかりませんせした: %s" % response.request.url)
 
     def parse_code(self, response):
         item = Source()
@@ -85,16 +96,19 @@ class SourcesSpider(CrawlSpider):
                 raise CloseSpider("EC-CUBE found")
 
     def err_handle(self, failure):
-        self.logger.error(repr(failure))
+        logger.error(repr(failure))
 
         if failure.check(HttpError):
             response = failure.value.response
-            self.logger.error('HttpError on %s', response.url)
+            logger.error('HttpError on %s', response.url)
 
         elif failure.check(DNSLookupError):
             request = failure.request
-            self.logger.error('DNSLookupError on %s', request.url)
+            logger.error('DNSLookupError on %s', request.url)
 
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
-            self.logger.error('TimeoutError on %s', request.url)
+            logger.error('TimeoutError on %s', request.url)
+        else:
+            request = failure.request
+            logger.error('UnhandledError on %s', request.url)
