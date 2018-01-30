@@ -154,8 +154,8 @@ if __name__ == '__main__':
                     or target_url.replace('http', 'https') + "/" in eccube_urls:
                 target_data.at[index, 'ec_cube'] = "EC-CUBE"
         print(target_data)
-
-        output_data = csv_data.merge(target_data)
+        # RDBの勉強必要
+        output_data = pd.merge(csv_data,target_data, left_index=True, right_index=True, on='url')
         print(output_data)
 
         logger.debug("CSVに結果を出力")
