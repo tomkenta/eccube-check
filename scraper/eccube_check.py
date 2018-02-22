@@ -40,7 +40,7 @@ parser.add_argument('-c', '--csv',
                     help='check urls in csv OUTPUT: csv.')
 
 
-def eccube_check(url, domain):
+def cart_check(url, domain):
     """クロールの実行"""
 
     # settings.pyから設定を得る
@@ -54,7 +54,7 @@ def eccube_check(url, domain):
     elif isinstance(url, list):
         process.crawl('sources', start_urls=url, allowed_domains=domain)
     else:
-        logger.warning("eccube_check(url, domain): url/domain should be str or list")
+        logger.warning("cart_check(url, domain): url/domain should be str or list")
         exit(1)
 
     # クロール開始
@@ -87,20 +87,18 @@ if url is not None:
     domain = crop_domain_from_url(url)
 
     # urlによるcheck開始
-    eccube_check(url, domain)
+    cart_check(url, domain)
 
     with open('data/data.json', 'r') as f:
         if os.fstat(f.fileno()).st_size > 0:
             data = json.load(f)
-        for ele in data:
-            pattern = r"eccube"
-            if ele:
-                is_eccube = ele['ec_cube']
-                if bool(is_eccube):
-                    print(url + ' uses EC-CUBE')
+            for ele in data:
+                if ele is not None:
+                    cart = ele['cart']
+                    print("{url}は{cart}を使用しています。".format(url=url, cart=cart))
                     exit(0)
 
-        print(url + 'DO NOT use EC-CUBE')
+        print("{url}はどのカートも使用していません。".format(url=url))
 
 elif csv is not None:
 
@@ -118,39 +116,41 @@ elif csv is not None:
         domains.append(crop_domain_from_url(url))
 
     # urlによるcheck開始
-    eccube_check(urls, domains)
+    cart_check(urls, domains)
 
-    eccube_url_data = []
+    cart_url_data = []
     with open('data/data.json', 'r') as f:
         if os.fstat(f.fileno()).st_size > 0:
-            eccube_url_data = json.load(f)
+            cart_url_data = json.load(f)
 
     # 重複の解消 TODO:高速化の余地
-    eccube_url_data_uniq = []
-    for x in eccube_url_data:
-        if x not in eccube_url_data_uniq:
-            eccube_url_data_uniq.append(x)
+    cart_url_data_uniq = []
+    for x in cart_url_data:
+        if x not in cart_url_data_uniq:
+            cart_url_data_uniq.append(x)
 
     # SeriesからDataFrameに
     target_data = url_data.to_frame('url')
-    # ec_cube列を初期化
-    target_data['ec_cube'] = ""
+    # cart列を追加・初期化
+    target_data['cart'] = ""
     print(target_data)
 
-    # ec_cubeを使っているurlsのリストを抽出
-    eccube_urls = [ele["url"] for ele in eccube_url_data_uniq]
+    cart_dict = {ele['url']: ele['cart'] for ele in cart_url_data_uniq}
+    cart_urls = list(cart_dict.keys())
 
     for index in target_data.index:
         target_url = target_data.at[index, 'url']
-        # httpsと末尾の/対応
-        # indexのお陰でscrapyでitemをyieldする順番(eccube_urlsの順番)がわからなくても元データとの順番が保たれる
-        if target_url in eccube_urls \
-                or target_url.replace('http', 'https') in eccube_urls \
-                or target_url + "/" in eccube_urls \
-                or target_url.replace('http', 'https') + "/" in eccube_urls:
-            target_data.at[index, 'ec_cube'] = "EC-CUBE"
+        # indexのお陰でscrapyでitemをyieldする順番(cart_urlsの順番)がわからなくても元データとの順番が保たれる
+        # https・末尾の/対応のための4パターン
+        check_url_pattern = (target_url,
+                             target_url + "/",
+                             target_url.replace('http', 'https'),
+                             target_url.replace('http', 'https') + "/")
+        for url in check_url_pattern:
+            if url in cart_urls:
+                target_data.at[index, 'cart'] = cart_dict[url]
+
     print(target_data)
-    # RDBの勉強必要
     output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='url')
     print(output_data)
 

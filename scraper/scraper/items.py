@@ -16,5 +16,5 @@ class Quote(scrapy.Item):
 
 
 class Source(scrapy.Item):
-    ec_cube = scrapy.Field()
+    cart = scrapy.Field()
     url = scrapy.Field()

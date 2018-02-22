@@ -57,10 +57,14 @@ class SourcesSpider(CrawlSpider):
         if srcs:
             for i, src in enumerate(srcs):
                 src_url = response.urljoin(src)
+                logger.info("check url is {url}".format(url=src))
 
-                if re.search(r"eccube", src):
+                if re.search(r"jquery", src):
+                    continue
+
+                elif re.search(r"eccube", src):
                     # 一回の場合は url は baseurlをget_base_urlを使って取る
-                    res = {'ec_cube': 'True', 'url': get_base_url(response)}
+                    res = {'cart': 'EC-CUBE', 'url': get_base_url(response)}
                     logger.info("EC-CUBE found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -69,9 +73,16 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with EC-CUBE found")
                         raise CloseSpider("EC-CUBE found")
 
-                elif re.search(r"jquery", src):
-                    # logger.debug("jQueryのsrcはスキップします:%s", src)
-                    continue
+                elif re.search(r"usces_cart", src):
+                    res = {'cart': 'Welcart', 'url': get_base_url(response)}
+                    logger.info("Welcart found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with Welcart found")
+                        raise CloseSpider("WelCart found")
+
                 else:
                     yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
         else:
@@ -79,11 +90,10 @@ class SourcesSpider(CrawlSpider):
 
     def parse_code(self, response):
         item = Source()
-
-        is_eccube = "EC-CUBE" in response.text[0:500]
-        if is_eccube:
+        downloaded_text = response.text[0:500]
+        if "EC-CUBE" in downloaded_text:
             # 再帰的に取る場合は url は baseurlをrefererを使って取る
-            item['ec_cube'] = str(is_eccube)
+            item['cart'] = 'EC-CUBE'
             item['url'] = referer_str(response.request)
             logger.info("EC-CUBE found for %s", referer_str(response.request))
             yield item
