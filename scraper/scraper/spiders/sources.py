@@ -1,23 +1,20 @@
 # -*- coding: utf-8 -*-
 from scrapy import Request
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy.spiders import CrawlSpider
 from ..items import Source
 from scrapy.exceptions import *
 from scrapy.utils.request import referer_str
 from scrapy.utils.response import get_base_url
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TimeoutError, TCPTimedOutError
+from logging import getLogger, StreamHandler, Formatter, DEBUG
 import re
-from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
 
 # logging
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 # コンソール表示用
 stream_handler = StreamHandler()
-# ログファイル用
-
 
 formatter = Formatter(
     fmt="%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -41,9 +38,6 @@ class SourcesSpider(CrawlSpider):
     # メンテナンスされていないけどec-cubeを使っているページ用
     handle_httpstatus_list = [500]
 
-    # allowed_domains = ["kawasaki-chintai.com"]
-    # start_urls = ["http://www.kawasaki-chintai.com"]
-
     def start_requests(self):
         for url in self.start_urls:
             try:
@@ -52,16 +46,6 @@ class SourcesSpider(CrawlSpider):
             except ValueError:
                 logger.error("不正なURLを検知 :%s" % url)
                 pass
-                # TODO: 最初のurl のクレンジング
-                # http_url = "http://" + url
-                # logger.debug("httpをつけてリトライ :%s" % http_url)
-                #
-                # try:
-                #     yield Request(http_url, callback=self.parse, errback=self.err_handle)
-                #
-                # except ValueError:
-                #     logger.error("再び不正なURLを検知 :%s" % http_url)
-                #     pass
 
             except:
                 logger.error("スタート時にエラーの発生 :%s" % url)

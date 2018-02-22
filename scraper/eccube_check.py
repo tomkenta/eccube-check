@@ -45,11 +45,6 @@ def eccube_check(url, domain):
 
     # settings.pyから設定を得る
     settings = get_project_settings()
-
-    # settings.update({
-    #     "FEED_FORMAT": 'csv',
-    #     "FEED_URI": 'data/data.csv'
-    # })
     process = CrawlerProcess(settings)
 
     # 引数型チェック
@@ -74,101 +69,101 @@ def crop_domain_from_url(url):
 
 
 if __name__ == '__main__':
-    logger.info("========================================%s========================================",
-                "EC-CUBE クローリング開始")
-    args_str = ' '.join(sys.argv)
-    logger.info("実行したコマンド:%s" % args_str)
-
     start = time()
     args = parser.parse_args()
     url = args.url
     csv = args.csv
 
-    if url is not None:
-        # data.jsonを空に
-        with open('data/data.json', 'w') as f:
-            f.write("")
+    args_str = ' '.join(sys.argv)
+    logger.info("========================================%s========================================",
+                "EC-CUBE クローリング開始")
+    logger.info("実行したコマンド:%s" % args_str)
 
-        domain = crop_domain_from_url(url)
+if url is not None:
+    # data.jsonを空に
+    with open('data/data.json', 'w') as f:
+        f.write("")
 
-        # urlによるcheck開始
-        eccube_check(url, domain)
+    domain = crop_domain_from_url(url)
 
-        with open('data/data.json', 'r') as f:
-            if os.fstat(f.fileno()).st_size > 0:
-                data = json.load(f)
-            for ele in data:
-                pattern = r"eccube"
-                if ele:
-                    is_eccube = ele['ec_cube']
-                    if bool(is_eccube):
-                        print(url + ' uses EC-CUBE')
-                        exit(0)
+    # urlによるcheck開始
+    eccube_check(url, domain)
 
-            print(url + 'DO NOT use EC-CUBE')
+    with open('data/data.json', 'r') as f:
+        if os.fstat(f.fileno()).st_size > 0:
+            data = json.load(f)
+        for ele in data:
+            pattern = r"eccube"
+            if ele:
+                is_eccube = ele['ec_cube']
+                if bool(is_eccube):
+                    print(url + ' uses EC-CUBE')
+                    exit(0)
 
-    elif csv is not None:
+        print(url + 'DO NOT use EC-CUBE')
 
-        # data.jsonを空に
-        with open('data/data.json', 'w') as f:
-            f.write("")
+elif csv is not None:
 
-        csv_data = pd.read_csv(csv)
+    # data.jsonを空に
+    with open('data/data.json', 'w') as f:
+        f.write("")
 
-        url_data = csv_data['url']
-        urls = url_data.tolist()
-        domains = []
+    csv_data = pd.read_csv(csv)
 
-        for url in urls:
-            domains.append(crop_domain_from_url(url))
+    url_data = csv_data['url']
+    urls = url_data.tolist()
+    domains = []
 
-        # urlによるcheck開始
-        eccube_check(urls, domains)
+    for url in urls:
+        domains.append(crop_domain_from_url(url))
 
-        eccube_url_data = []
-        with open('data/data.json', 'r') as f:
-            if os.fstat(f.fileno()).st_size > 0:
-                eccube_url_data = json.load(f)
+    # urlによるcheck開始
+    eccube_check(urls, domains)
 
-        # 重複の解消 TODO:高速化の余地
-        eccube_url_data_uniq = []
-        for x in eccube_url_data:
-            if x not in eccube_url_data_uniq:
-                eccube_url_data_uniq.append(x)
+    eccube_url_data = []
+    with open('data/data.json', 'r') as f:
+        if os.fstat(f.fileno()).st_size > 0:
+            eccube_url_data = json.load(f)
 
-        # SeriesからDataFrameに
-        target_data = url_data.to_frame('url')
-        # ec_cube列を初期化
-        target_data['ec_cube'] = ""
-        print(target_data)
+    # 重複の解消 TODO:高速化の余地
+    eccube_url_data_uniq = []
+    for x in eccube_url_data:
+        if x not in eccube_url_data_uniq:
+            eccube_url_data_uniq.append(x)
 
-        # ec_cubeを使っているurlsのリストを抽出
-        eccube_urls = [ele["url"] for ele in eccube_url_data_uniq]
+    # SeriesからDataFrameに
+    target_data = url_data.to_frame('url')
+    # ec_cube列を初期化
+    target_data['ec_cube'] = ""
+    print(target_data)
 
-        for index in target_data.index:
-            target_url = target_data.at[index, 'url']
-            # https と 末尾の/対応
-            # index のお陰で scrapyでitemをyieldする順番(eccube_urlsの順番)がわからなくても元データとの順番が保たれる
-            if target_url in eccube_urls \
-                    or target_url.replace('http', 'https') in eccube_urls \
-                    or target_url + "/" in eccube_urls \
-                    or target_url.replace('http', 'https') + "/" in eccube_urls:
-                target_data.at[index, 'ec_cube'] = "EC-CUBE"
-        print(target_data)
-        # RDBの勉強必要
-        output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='url')
-        print(output_data)
+    # ec_cubeを使っているurlsのリストを抽出
+    eccube_urls = [ele["url"] for ele in eccube_url_data_uniq]
 
-        logger.debug("CSVに結果を出力")
-        output_data.to_csv("data/output.csv")
+    for index in target_data.index:
+        target_url = target_data.at[index, 'url']
+        # httpsと末尾の/対応
+        # indexのお陰でscrapyでitemをyieldする順番(eccube_urlsの順番)がわからなくても元データとの順番が保たれる
+        if target_url in eccube_urls \
+                or target_url.replace('http', 'https') in eccube_urls \
+                or target_url + "/" in eccube_urls \
+                or target_url.replace('http', 'https') + "/" in eccube_urls:
+            target_data.at[index, 'ec_cube'] = "EC-CUBE"
+    print(target_data)
+    # RDBの勉強必要
+    output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='url')
+    print(output_data)
 
-        elapsed_time = time() - start
-        logger.info("elapsed_time:{0}".format(elapsed_time) + "[sec]")
-        logger.info("exit with 0")
-        logger.info("========================================%s========================================",
-                    "EC-CUBE クローリング終了")
-        exit(0)
+    logger.debug("CSVに結果を出力")
+    output_data.to_csv("data/output.csv")
 
-    else:
-        parser.print_help()
-        exit(0)
+    elapsed_time = time() - start
+    logger.info("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+    logger.info("exit with 0")
+    logger.info("========================================%s========================================",
+                "EC-CUBE クローリング終了")
+    exit(0)
+
+else:
+    parser.print_help()
+    exit(0)
