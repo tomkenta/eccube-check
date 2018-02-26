@@ -154,6 +154,17 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with makeshop found")
                         raise CloseSpider("makeshop found")
 
+                # Shopifyのチェック
+                elif re.search(r"cdn.shopify.com", src):
+                    res = {'cart': 'Shopify', 'url': get_base_url(response)}
+                    logger.info("Shopify found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with Shopify found")
+                        raise CloseSpider("Shopify found")
+
                 else:
                     yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
         else:
