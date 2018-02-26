@@ -96,6 +96,17 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with Magento found")
                         raise CloseSpider("Magento found")
 
+                # CS-Cartのチェック
+                elif re.search(r"tygh", src):
+                    res = {'cart': 'CS-Cart', 'url': get_base_url(response)}
+                    logger.info("CS-Cart found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with CS-Cart found")
+                        raise CloseSpider("CS-Cart found")
+
                 else:
                     yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
         else:
