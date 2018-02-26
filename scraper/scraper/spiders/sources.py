@@ -68,7 +68,7 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with MODD found")
                         raise CloseSpider("MODD found")
 
-        if srcs:
+        if srcs is not None:
             for i, src in enumerate(srcs):
                 src_url = response.urljoin(src)
                 logger.info("check url is {url}".format(url=src))
