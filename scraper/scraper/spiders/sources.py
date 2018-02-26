@@ -107,6 +107,17 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with CS-Cart found")
                         raise CloseSpider("CS-Cart found")
 
+                # cartstarのチェック
+                elif re.search(r"b4ff048c/application.js", src):
+                    res = {'cart': 'cartstar', 'url': get_base_url(response)}
+                    logger.info("cartstar found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with cartstar found")
+                        raise CloseSpider("cartstar found")
+
                 else:
                     yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
         else:
