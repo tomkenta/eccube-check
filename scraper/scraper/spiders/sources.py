@@ -62,6 +62,7 @@ class SourcesSpider(CrawlSpider):
                 if re.search(r"jquery", src):
                     continue
 
+                # EC-CUBEのチェック
                 elif re.search(r"eccube", src):
                     # 一回の場合は url は baseurlをget_base_urlを使って取る
                     res = {'cart': 'EC-CUBE', 'url': get_base_url(response)}
@@ -73,6 +74,7 @@ class SourcesSpider(CrawlSpider):
                         logger.info("close spider with EC-CUBE found")
                         raise CloseSpider("EC-CUBE found")
 
+                # Welcartのチェック
                 elif re.search(r"usces_cart", src):
                     res = {'cart': 'Welcart', 'url': get_base_url(response)}
                     logger.info("Welcart found for %s", get_base_url(response))
@@ -82,6 +84,17 @@ class SourcesSpider(CrawlSpider):
                     if len(self.start_urls) == 1:
                         logger.info("close spider with Welcart found")
                         raise CloseSpider("WelCart found")
+
+                # Magentoのチェック
+                elif re.search(r"/mage/", src) or re.search(r"/varien/", src):
+                    res = {'cart': 'Magento', 'url': get_base_url(response)}
+                    logger.info("Magento found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with Magento found")
+                        raise CloseSpider("Magento found")
 
                 else:
                     yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
@@ -101,6 +114,17 @@ class SourcesSpider(CrawlSpider):
             if len(self.start_urls) == 1:
                 logger.info("close spider with EC-CUBE found")
                 raise CloseSpider("EC-CUBE found")
+
+        # Magentoのチェック
+        elif "Mage" in downloaded_text:
+            item['cart'] = 'Magento'
+            item['url'] = referer_str(response.request)
+            logger.info("Magento found for %s", referer_str(response.request))
+            yield item
+            # 単一urlへのcheckの場合は止める
+            if len(self.start_urls) == 1:
+                logger.info("close spider with Magento found")
+                raise CloseSpider("Magento found")
 
     def err_handle(self, failure):
         logger.error(repr(failure))
