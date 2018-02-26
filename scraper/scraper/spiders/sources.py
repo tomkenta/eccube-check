@@ -74,6 +74,17 @@ class SourcesSpider(CrawlSpider):
                 logger.info("check url is {url}".format(url=src))
 
                 if re.search(r"jquery", src):
+                    # jquery下でのmakeshopのチェック
+                    if re.search(r"makeshop", src):
+                        res = {'cart': 'makeshop', 'url': get_base_url(response)}
+                        logger.info("makeshop found for %s", get_base_url(response))
+                        logger.debug(str(res))
+                        yield res
+
+                        if len(self.start_urls) == 1:
+                            logger.info("close spider with makeshop found")
+                        raise CloseSpider("makeshop found")
+
                     continue
 
                 # EC-CUBEのチェック
@@ -131,6 +142,17 @@ class SourcesSpider(CrawlSpider):
                     if len(self.start_urls) == 1:
                         logger.info("close spider with cartstar found")
                         raise CloseSpider("cartstar found")
+
+                # makeshopのチェック
+                elif re.search(r"makeshop", src):
+                    res = {'cart': 'makeshop', 'url': get_base_url(response)}
+                    logger.info("makeshop found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with makeshop found")
+                        raise CloseSpider("makeshop found")
 
                 else:
                     yield Request(src_url, callback=self.parse_code, errback=self.err_handle)
