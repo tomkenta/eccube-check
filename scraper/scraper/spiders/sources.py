@@ -53,6 +53,20 @@ class SourcesSpider(CrawlSpider):
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
+        hrefs = response.xpath('//a/@href').extract()
+
+        if hrefs is not None:
+            for i, href in enumerate(hrefs):
+                # MODDのチェック
+                if re.search(r"modd", href) or re.search(r"ShoppingCart.aspx", href):
+                    res = {'cart': 'MODD', 'url': get_base_url(response)}
+                    logger.info("MODD found for %s", get_base_url(response))
+                    logger.debug(str(res))
+                    yield res
+
+                    if len(self.start_urls) == 1:
+                        logger.info("close spider with MODD found")
+                        raise CloseSpider("MODD found")
 
         if srcs:
             for i, src in enumerate(srcs):
