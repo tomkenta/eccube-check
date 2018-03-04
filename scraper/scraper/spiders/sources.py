@@ -83,7 +83,7 @@ class SourcesSpider(CrawlSpider):
 
                         if len(self.start_urls) == 1:
                             logger.info("close spider with makeshop found")
-                        raise CloseSpider("makeshop found")
+                            raise CloseSpider("makeshop found")
 
                     continue
 
