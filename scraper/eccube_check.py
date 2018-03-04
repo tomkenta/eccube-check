@@ -108,7 +108,8 @@ elif csv is not None:
 
     csv_data = pd.read_csv(csv)
 
-    url_data = csv_data['url']
+    # 値がない場合は弾く
+    url_data = csv_data['url'].dropna()
     urls = url_data.tolist()
     domains = []
 
