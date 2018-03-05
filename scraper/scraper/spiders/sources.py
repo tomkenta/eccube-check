@@ -17,7 +17,7 @@ logger.setLevel(DEBUG)
 stream_handler = StreamHandler()
 
 formatter = Formatter(
-    fmt="%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    fmt="[%(asctime)s] %(levelname)-8s %(message)s :[%(name)s Line:%(lineno)d]", datefmt="%Y-%m-%d %H:%M:%S")
 stream_handler.setFormatter(formatter)
 stream_handler.setLevel(DEBUG)
 
