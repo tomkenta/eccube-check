@@ -73,7 +73,6 @@ class SourcesSpider(CrawlSpider):
         if srcs is not None:
             for i, src in enumerate(srcs):
                 src_url = response.urljoin(src)
-                logger.info("check url is {url}".format(url=src))
 
                 if re.search(r"jquery", src):
                     # jquery下でのmakeshopのチェック
