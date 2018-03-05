@@ -40,16 +40,18 @@ class SourcesSpider(CrawlSpider):
 
     def start_requests(self):
         for url in self.start_urls:
-            try:
-                yield Request(url, callback=self.parse, errback=self.err_handle)
+            if "rakuten" not in url and "yahoo" not in url:
+                try:
+                    yield Request(url, callback=self.parse, errback=self.err_handle)
 
-            except ValueError:
-                logger.error("不正なURLを検知 :%s" % url)
-                pass
+                except ValueError:
+                    logger.error("不正なURLを検知 :%s" % url)
+                    pass
 
-            except:
-                logger.error("スタート時にエラーの発生 :%s" % url)
-                raise CloseSpider("異常終了")
+                except:
+                    logger.error("スタート時にエラーの発生 :%s" % url)
+                    raise CloseSpider("異常終了")
+
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()

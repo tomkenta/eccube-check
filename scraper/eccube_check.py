@@ -151,15 +151,16 @@ elif csv is not None:
             if url in cart_urls:
                 target_data.at[index, 'cart'] = cart_dict[url]
 
-    print(target_data)
     output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='url')
-    print(output_data)
+
+    vc = output_data['cart'].value_counts()
 
     logger.debug("CSVに結果を出力")
     output_data.to_csv("data/output.csv")
 
     elapsed_time = time() - start
     logger.info("elapsed_time:{0}".format(elapsed_time) + "[sec]")
+    logger.info("appear count\n {}".format(vc))
     logger.info("exit with 0")
     logger.info("========================================%s========================================",
                 "EC-CUBE クローリング終了")
