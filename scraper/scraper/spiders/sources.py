@@ -30,7 +30,7 @@ class SourcesSpider(CrawlSpider):
     custom_settings = {
         'LOG_FILE': 'log/test.log',
         'LOG_ENABLED': False,
-        'LOG_FORMAT': '%(asctime)s [%(name)s Line:%(lineno)d] %(levelname)s - %(message)s',
+        'LOG_FORMAT': '[%(asctime)s] %(levelname)-8s %(message)s :[%(name)s Line:%(lineno)d]"',
         'LOG_DATEFORMAT': '%Y-%m-%d %H:%M:%S',
         'LOG_STDOUT': True
     }
@@ -51,7 +51,6 @@ class SourcesSpider(CrawlSpider):
                 except:
                     logger.error("スタート時にエラーの発生 :%s" % url)
                     raise CloseSpider("異常終了")
-
 
     def parse(self, response):
         srcs = response.xpath('//script/@src').extract()
