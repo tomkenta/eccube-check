@@ -8,6 +8,7 @@ from scrapy.utils.response import get_base_url
 from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TimeoutError, TCPTimedOutError
 from logging import getLogger, StreamHandler, Formatter, DEBUG
+from datetime import datetime
 import re
 
 # logging
@@ -28,7 +29,7 @@ class SourcesSpider(CrawlSpider):
     name = 'sources'
     # self.loggerに対するsetting
     custom_settings = {
-        'LOG_FILE': 'log/test.log',
+        'LOG_FILE': datetime.now().strftime('log/test_%Y_%m_%d_%H_%M_%S.log'),
         'LOG_ENABLED': False,
         'LOG_FORMAT': '[%(asctime)s] %(levelname)-8s %(message)s :[%(name)s Line:%(lineno)d]"',
         'LOG_DATEFORMAT': '%Y-%m-%d %H:%M:%S',

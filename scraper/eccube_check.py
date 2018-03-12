@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from time import time
+from datetime import datetime
 from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
 
 # logging
@@ -12,7 +13,7 @@ logger.setLevel(DEBUG)
 # コンソール表示用
 stream_handler = StreamHandler()
 # ログファイル用
-file_handler = FileHandler(filename='log/test.log')
+file_handler = FileHandler(filename=datetime.now().strftime('log/test_%Y_%m_%d_%H_%M_%S.log'))
 
 formatter = Formatter(
     fmt="[%(asctime)s] %(levelname)-8s %(message)s :[%(name)s Line:%(lineno)d]", datefmt="%Y-%m-%d %H:%M:%S")
