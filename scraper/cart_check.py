@@ -29,7 +29,7 @@ logger.addHandler(file_handler)
 
 # コマンドライン用のパーサ
 parser = argparse.ArgumentParser(
-    prog='eccube_check.py',
+    prog='cart_check.py',
     description='eccube checker ',
     epilog='(end)',
     add_help=True
