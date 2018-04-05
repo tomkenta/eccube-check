@@ -18,3 +18,4 @@ class Quote(scrapy.Item):
 class Source(scrapy.Item):
     cart = scrapy.Field()
     url = scrapy.Field()
+    error = scrapy.Field()

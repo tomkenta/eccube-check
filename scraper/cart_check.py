@@ -40,6 +40,10 @@ parser.add_argument('-u', '--url',
 parser.add_argument('-c', '--csv',
                     help='check urls in csv OUTPUT: csv.')
 
+# 添字よう
+CART = 0
+ERROR = 1
+
 
 def cart_check(url, domain):
     """クロールの実行"""
@@ -67,6 +71,30 @@ def crop_domain_from_url(url):
     parsed_url = urlparse(url)
     domain = '{uri.netloc}'.format(uri=parsed_url)
     return domain
+
+
+def is_atk(str):
+    atks = ("運用中",
+            "加盟再審査依頼済",
+            "加盟審査NG",
+            "加盟審査OK・承認依頼済",
+            "加盟審査依頼済",
+            "加盟審査承認済",
+            "加盟審査中",
+            "加盟審査保留",
+            "加盟審査保留対応中",
+            "加盟店解約済",
+            "加盟店解約中",
+            "加盟店解約予約済",
+            "加盟店強制解約中",
+            "契約棄却",
+            "契約見送り",
+            "成約(申込書受領済)")
+
+    if str in atks:
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':
@@ -110,7 +138,7 @@ if __name__ == '__main__':
         csv_data = pd.read_csv(csv)
 
         # 値がない場合は弾く
-        url_data = csv_data['url'].dropna()
+        url_data = csv_data['URL__C'].dropna()
         urls = url_data.tolist()
         domains = []
 
@@ -132,16 +160,17 @@ if __name__ == '__main__':
                 cart_url_data_uniq.append(x)
 
         # SeriesからDataFrameに
-        target_data = url_data.to_frame('url')
-        # cart列を追加・初期化
+        target_data = url_data.to_frame('URL__C')
+        # cart, error 列を追加・初期化
         target_data['cart'] = ""
+        target_data['error'] = ""
         print(target_data)
 
-        cart_dict = {ele['url']: ele['cart'] for ele in cart_url_data_uniq}
-        cart_urls = list(cart_dict.keys())
+        dict = {ele['url']: [ele['cart'], ele['error']] for ele in cart_url_data_uniq}
+        cart_urls = list(dict.keys())
 
         for index in target_data.index:
-            target_url = target_data.at[index, 'url']
+            target_url = target_data.at[index, 'URL__C']
             # indexのお陰でscrapyでitemをyieldする順番(cart_urlsの順番)がわからなくても元データとの順番が保たれる
             # https・末尾の/対応のための4パターン
             check_url_pattern = (target_url,
@@ -150,18 +179,48 @@ if __name__ == '__main__':
                                  target_url.replace('http', 'https') + "/")
             for url in check_url_pattern:
                 if url in cart_urls:
-                    target_data.at[index, 'cart'] = cart_dict[url]
+                    target_data.at[index, 'cart'] = dict[url][CART]
+                    target_data.at[index, 'error'] = dict[url][ERROR]
 
-        output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='url')
+        print('======= signed ===========')
+        print(target_data)
+        # url を基準に join
+        output_data = pd.merge(csv_data, target_data, left_index=True, right_index=True, on='URL__C')
+        print(output_data)
 
-        vc = output_data['cart'].value_counts()
+        # 判定できたカート数, 404
+        v_counts = output_data['cart'].value_counts()
+        e_counts = output_data['error'].value_counts()
 
+        # データ採用ロジック部分
+        for index in output_data.index:
+            cart_from_crawler = output_data.at[index, 'cart']
+            # パターン 1, 2
+            if cart_from_crawler:
+                if is_atk(output_data.at[index, 'ACCOUNTNAME__R.ACCOUNTSTATUS__R.NAME']):
+                    continue
+                else:
+                    output_data.at[index, 'SHOPPINGCART__C'] = cart_from_crawler
+            else:
+                cart_from_sf = output_data.at[index, 'SHOPPINGCART__C']
+                # パターン3
+                if cart_from_sf:
+                    if is_atk(output_data.at[index, 'ACCOUNTNAME__R.ACCOUNTSTATUS__R.NAME']):
+                        continue
+                    elif output_data.at[index, 'error'] == '404':
+                        output_data.at[index, 'URL__C'] = ""
+
+        output_data.to_csv("data/pwd_output.csv")
         logger.debug("CSVに結果を出力")
-        output_data.to_csv("data/output.csv")
+
+        # SFインポートに必要なデータだけを抽出
+        d = output_data.loc[:, ['ID', 'URL__C', 'SHOPPINGCART__C']]
+        d.to_csv("data/output.csv", index=False)
 
         elapsed_time = time() - start
         logger.info("elapsed_time:{0}".format(elapsed_time) + "[sec]")
-        logger.info("appear count\n {}".format(vc))
+        logger.info("checked count\n {}".format(v_counts))
+        logger.info("404 count\n {}".format(e_counts))
         logger.info("exit with 0")
         logger.info("========================================%s========================================",
                     "EC-CUBE クローリング終了")

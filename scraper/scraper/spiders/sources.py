@@ -9,6 +9,7 @@ from scrapy.spidermiddlewares.httperror import HttpError
 from twisted.internet.error import DNSLookupError, TimeoutError, TCPTimedOutError
 from logging import getLogger, StreamHandler, Formatter, DEBUG
 from datetime import datetime
+from enum import Enum
 import re
 
 # logging
@@ -23,6 +24,17 @@ stream_handler.setFormatter(formatter)
 stream_handler.setLevel(DEBUG)
 
 logger.addHandler(stream_handler)
+
+
+class Cart(str, Enum):
+    ec_cube = "EC-CUBE"
+    welcart = "Welcart"
+    magento = "Magento"
+    cs_cart = "CS-Cart"
+    cartstar = "cartstar"
+    modd = "MODD"
+    makeshop = "MakeShop"
+    shopify = "Shopify"
 
 
 class SourcesSpider(CrawlSpider):
@@ -61,7 +73,7 @@ class SourcesSpider(CrawlSpider):
             for i, href in enumerate(hrefs):
                 # MODDのチェック
                 if re.search(r"modd", href) or re.search(r"ShoppingCart.aspx", href):
-                    res = {'cart': 'MODD', 'url': get_base_url(response)}
+                    res = {'cart': Cart.modd, 'url': get_base_url(response)}
                     logger.info("MODD found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -77,7 +89,7 @@ class SourcesSpider(CrawlSpider):
                 if re.search(r"jquery", src):
                     # jquery下でのmakeshopのチェック
                     if re.search(r"makeshop", src):
-                        res = {'cart': 'makeshop', 'url': get_base_url(response)}
+                        res = {'cart': Cart.makeshop, 'url': get_base_url(response)}
                         logger.info("makeshop found for %s", get_base_url(response))
                         logger.debug(str(res))
                         yield res
@@ -91,7 +103,7 @@ class SourcesSpider(CrawlSpider):
                 # EC-CUBEのチェック
                 elif re.search(r"eccube", src):
                     # 一回の場合は url は baseurlをget_base_urlを使って取る
-                    res = {'cart': 'EC-CUBE', 'url': get_base_url(response)}
+                    res = {'cart': Cart.ec_cube, 'url': get_base_url(response)}
                     logger.info("EC-CUBE found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -102,7 +114,7 @@ class SourcesSpider(CrawlSpider):
 
                 # Welcartのチェック
                 elif re.search(r"usces_cart", src):
-                    res = {'cart': 'Welcart', 'url': get_base_url(response)}
+                    res = {'cart': Cart.welcart, 'url': get_base_url(response)}
                     logger.info("Welcart found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -113,7 +125,7 @@ class SourcesSpider(CrawlSpider):
 
                 # Magentoのチェック
                 elif re.search(r"/mage/", src) or re.search(r"/varien/", src):
-                    res = {'cart': 'Magento', 'url': get_base_url(response)}
+                    res = {'cart': Cart.magento, 'url': get_base_url(response)}
                     logger.info("Magento found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -124,7 +136,7 @@ class SourcesSpider(CrawlSpider):
 
                 # CS-Cartのチェック
                 elif re.search(r"tygh", src):
-                    res = {'cart': 'CS-Cart', 'url': get_base_url(response)}
+                    res = {'cart': Cart.cs_cart, 'url': get_base_url(response)}
                     logger.info("CS-Cart found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -135,7 +147,7 @@ class SourcesSpider(CrawlSpider):
 
                 # cartstarのチェック
                 elif re.search(r"b4ff048c/application.js", src):
-                    res = {'cart': 'cartstar', 'url': get_base_url(response)}
+                    res = {'cart': Cart.cartstar, 'url': get_base_url(response)}
                     logger.info("cartstar found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -146,7 +158,7 @@ class SourcesSpider(CrawlSpider):
 
                 # makeshopのチェック
                 elif re.search(r"makeshop", src):
-                    res = {'cart': 'makeshop', 'url': get_base_url(response)}
+                    res = {'cart': Cart.makeshop, 'url': get_base_url(response)}
                     logger.info("makeshop found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -157,7 +169,7 @@ class SourcesSpider(CrawlSpider):
 
                 # Shopifyのチェック
                 elif re.search(r"cdn.shopify.com", src):
-                    res = {'cart': 'Shopify', 'url': get_base_url(response)}
+                    res = {'cart': Cart.shopify, 'url': get_base_url(response)}
                     logger.info("Shopify found for %s", get_base_url(response))
                     logger.debug(str(res))
                     yield res
@@ -176,7 +188,7 @@ class SourcesSpider(CrawlSpider):
         downloaded_text = response.text[0:500]
         if "EC-CUBE" in downloaded_text:
             # 再帰的に取る場合は url は baseurlをrefererを使って取る
-            item['cart'] = 'EC-CUBE'
+            item['cart'] = Cart.ec_cube
             item['url'] = referer_str(response.request)
             logger.info("EC-CUBE found for %s", referer_str(response.request))
             yield item
@@ -187,7 +199,7 @@ class SourcesSpider(CrawlSpider):
 
         # Magentoのチェック
         elif "Mage" in downloaded_text:
-            item['cart'] = 'Magento'
+            item['cart'] = Cart.magento
             item['url'] = referer_str(response.request)
             logger.info("Magento found for %s", referer_str(response.request))
             yield item
@@ -205,7 +217,11 @@ class SourcesSpider(CrawlSpider):
 
         elif failure.check(DNSLookupError):
             request = failure.request
+            res = {'cart': '', 'url': request.url, 'error': "404"}
             logger.error('DNSLookupError on %s', request.url)
+            logger.debug(str(res))
+            yield res
+
 
         elif failure.check(TimeoutError, TCPTimedOutError):
             request = failure.request
