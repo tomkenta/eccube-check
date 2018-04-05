@@ -210,12 +210,12 @@ if __name__ == '__main__':
                     elif output_data.at[index, 'error'] == '404':
                         output_data.at[index, 'URL__C'] = ""
 
-        output_data.to_csv("data/pwd_output.csv")
+        output_data.to_csv("data/output/pwd_output.csv")
         logger.debug("CSVに結果を出力")
 
         # SFインポートに必要なデータだけを抽出
         d = output_data.loc[:, ['ID', 'URL__C', 'SHOPPINGCART__C']]
-        d.to_csv("data/output.csv", index=False)
+        d.to_csv("data/output/output.csv", index=False)
 
         elapsed_time = time() - start
         logger.info("elapsed_time:{0}".format(elapsed_time) + "[sec]")
