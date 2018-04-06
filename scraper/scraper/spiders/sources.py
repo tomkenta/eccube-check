@@ -10,7 +10,7 @@ from twisted.internet.error import DNSLookupError, TimeoutError, TCPTimedOutErro
 from logging import getLogger, StreamHandler, Formatter, DEBUG
 from datetime import datetime
 from enum import Enum
-import re
+import re, os
 
 # logging
 logger = getLogger(__name__)
@@ -24,6 +24,9 @@ stream_handler.setFormatter(formatter)
 stream_handler.setLevel(DEBUG)
 
 logger.addHandler(stream_handler)
+
+# path
+dir_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class Cart(str, Enum):
@@ -41,7 +44,7 @@ class SourcesSpider(CrawlSpider):
     name = 'sources'
     # self.loggerに対するsetting
     custom_settings = {
-        'LOG_FILE': datetime.now().strftime('log/test_%Y_%m_%d_%H_%M_%S.log'),
+        'LOG_FILE': datetime.now().strftime(dir_path + '/log/test_%Y_%m_%d.log'),
         'LOG_ENABLED': False,
         'LOG_FORMAT': '[%(asctime)s] %(levelname)-8s %(message)s :[%(name)s Line:%(lineno)d]"',
         'LOG_DATEFORMAT': '%Y-%m-%d %H:%M:%S',

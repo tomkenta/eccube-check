@@ -7,13 +7,16 @@ from time import time
 from datetime import datetime
 from logging import getLogger, FileHandler, StreamHandler, Formatter, DEBUG, WARN
 
+# path
+dir_path = os.path.dirname(os.path.abspath(__file__))
+
 # logging
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 # コンソール表示用
 stream_handler = StreamHandler()
 # ログファイル用
-file_handler = FileHandler(filename=datetime.now().strftime('log/test_%Y_%m_%d_%H_%M_%S.log'))
+file_handler = FileHandler(filename=datetime.now().strftime(dir_path + '/log/test_%Y_%m_%d.log'))
 
 formatter = Formatter(
     fmt="[%(asctime)s] %(levelname)-8s %(message)s :[%(name)s Line:%(lineno)d]", datefmt="%Y-%m-%d %H:%M:%S")
@@ -110,7 +113,7 @@ if __name__ == '__main__':
 
     if url is not None:
         # data.jsonを空に
-        with open('data/data.json', 'w') as f:
+        with open(dir_path + '/data/data.json', 'w') as f:
             f.write("")
 
         domain = crop_domain_from_url(url)
@@ -118,7 +121,7 @@ if __name__ == '__main__':
         # urlによるcheck開始
         cart_check(url, domain)
 
-        with open('data/data.json', 'r') as f:
+        with open(dir_path + '/data/data.json', 'r') as f:
             if os.fstat(f.fileno()).st_size > 0:
                 data = json.load(f)
                 for ele in data:
@@ -132,7 +135,7 @@ if __name__ == '__main__':
     elif csv is not None:
 
         # data.jsonを空に
-        with open('data/data.json', 'w') as f:
+        with open(dir_path + '/data/data.json', 'w') as f:
             f.write("")
 
         csv_data = pd.read_csv(csv)
@@ -149,7 +152,7 @@ if __name__ == '__main__':
         cart_check(urls, domains)
 
         cart_url_data = []
-        with open('data/data.json', 'r') as f:
+        with open(dir_path + '/data/data.json', 'r') as f:
             if os.fstat(f.fileno()).st_size > 0:
                 cart_url_data = json.load(f)
 
